@@ -10,9 +10,15 @@ Production-style Retrieval Augmented Generation system built with LangChain, FAI
 DocumentLoader
      │  (PDF / TXT)
      ▼
-Normalize Existing Documents
-      ↓
-SemanticChunker          ← topic-aware splitting (no fixed chunk size)/Custom Chunking
+Text Normalization Layer
+     │   - Unicode cleaning (NFKC)
+     │   - lowercase (optional)
+     │   - whitespace cleanup
+     │   - optional lemmatization (spaCy/NLTK)
+     ▼
+Chunking Layer (Pluggable)
+     ├── SemanticChunker (LangChain)
+     └── CustomDynamicChunker (embedding-based similarity split)
      │
      ▼
 EmbeddingFactory         ← Google Generative AI  OR  OpenAI
@@ -20,6 +26,11 @@ EmbeddingFactory         ← Google Generative AI  OR  OpenAI
      ▼
 VectorStoreManager       ← FAISS index + similarity retriever
      │
+     │
+     │──▶  PydanticModel (LCEL)  ← rewrites follow-up question into a standalone
+     │         │                    question using chat history (structured
+     │         │                    output via Pydantic: ParentQuestion)
+     │         ▼
      ├──▶  RAGChain      ← stuff-documents chain + system prompt (anti-hallucination)
      │         │
      │         └──▶  MemoryManager  (InMemoryChatMessageHistory, sliding window)
